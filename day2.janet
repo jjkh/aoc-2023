@@ -1,5 +1,5 @@
 (def game-grammar (peg/compile
-  ~{:num (number (some :d))
+  ~{:num (number :d+)
     :color (+ 
       (/ "blue" :blue)
       (/ "green" :green)
@@ -9,19 +9,39 @@
       (* :num " " :color) 
       ,|{$1 $0})
     :handful (/ 
-      (some (* :cube-count (any ", ")))
-      ,|(table/to-struct (merge ;$&)))
+      (some (* :cube-count (? ", ")))
+      ,|(merge ;$&))
     :main (/ 
-      (* :game-id (some (* :handful (any "; "))))
+      (* :game-id (some (* :handful (? "; "))))
       ,|{:id $0 :handfuls $&})}))
 
-(defn main [&]
-  (with [f (file/open "day2_test.txt")]
-    (def games (map |(first (peg/match game-grammar $)) (file/lines f)))
-    # (pp games)
-    (def pt1-maximums {:red 12 :green 13 :blue 14})
-    (def pt1 (= 0 (length (filter
-      ))
+(defn min-cubes [handfuls]
+  {:red   (max ;(map |(get $ :red 0)   handfuls))
+   :green (max ;(map |(get $ :green 0) handfuls))
+   :blue  (max ;(map |(get $ :blue 0)  handfuls))})
 
-    (filter )
-    # (map |(print ($ :id) ($ :games)) games)))
+(defn exceeds-pt1-max [cubes]
+    (def maxes {:red 12 :green 13 :blue 14})
+    (or (< (maxes :red)   (cubes :red))
+        (< (maxes :green) (cubes :green))
+        (< (maxes :blue)  (cubes :blue))))
+
+(defn main [&]
+  (with [f (file/open "day2.txt")]
+    (def games 
+      (map |(first (peg/match game-grammar $)) (file/lines f)))
+    # (pp games)
+    (def min-cubes (seq [game :in games]
+        {:id (game :id) :min-cubes (min-cubes (game :handfuls))}))
+
+    (def pt1 
+      (sum 
+        (seq [game :in min-cubes
+              :unless (exceeds-pt1-max (game :min-cubes))]
+          (game :id))))
+
+    (def pt2
+      (sum (map |(product ($ :min-cubes)) min-cubes)))
+
+    (print "Part 1: " pt1)
+    (print "Part 2: " pt2)))
