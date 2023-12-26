@@ -44,4 +44,4 @@
       (sum (map |(product ($ :min-cubes)) min-cubes)))
 
     (print "Part 1: " pt1)
-    (print "Part 2: " pt2)))
+    (print "Part 2: " pt2)))`
